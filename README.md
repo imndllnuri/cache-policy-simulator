@@ -1,4 +1,4 @@
-# Cache Policy Simulator
+# Cache Policy Simulator (planned)
 
 A two-stage toolchain to **trace memory accesses with Intel Pin (via SDE)** and **simulate cache replacement policies** (LRU, FIFO, etc.) using configurable cache parameters.
 

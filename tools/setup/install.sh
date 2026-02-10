@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Ensure we are running from repo root
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# Resolve paths robustly
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 cd "${REPO_ROOT}"
 
 # ---- config ----
@@ -37,7 +38,13 @@ else
 fi
 
 # ---- environment ----
-source "$(dirname "$0")/setvars.sh"
+source "${SCRIPT_DIR}/setvars.sh"
+
+# ---- sanity check Pin ----
+[[ -x "${PIN_ROOT}/pin" ]] || {
+  echo "[ERROR] Pin not found under pinkit"
+  exit 1
+}
 
 # ---- build tool ----
 echo "[INFO] Building Pintool..."
