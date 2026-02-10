@@ -1,5 +1,3 @@
----
-
 # Cache Policy Simulator
 
 A two-stage toolchain to **trace memory accesses with Intel Pin (via SDE)** and **simulate cache replacement policies** (LRU, FIFO, etc.) using configurable cache parameters.
@@ -51,5 +49,3 @@ simulator/cache_configuration.json
 * Add more policies (PLRU, Random)
 * Multi-level cache
 * Stats export (CSV/JSON)
-
----
