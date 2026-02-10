@@ -1,0 +1,4 @@
+tools/sde-kit/
+traces/
+*.trace
+obj-intel64/
