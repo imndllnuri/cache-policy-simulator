@@ -98,7 +98,7 @@ VOID RecordMem(UINT64 instruction_pointer, UINT64 virtual_address,
   record.virtual_address = virtual_address;
   record.instruction_pointer = instruction_pointer;
   record.instruction_size = instruction_size;
-  record.isWrite = is_write;
+  record.is_write = is_write;
 
   // Write the record to trace file
   outTrace.write(reinterpret_cast<const char *>(&record), sizeof(record));

@@ -15,7 +15,7 @@ struct MemAccess {
   UINT64 virtual_address;
   UINT64 instruction_pointer;
   UINT8 instruction_size;
-  BOOL isWrite;
+  BOOL is_write;
 };
 
 // Function declarations
