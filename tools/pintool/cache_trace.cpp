@@ -17,6 +17,7 @@
 FILE *outDebug = nullptr;
 FILE *outLog = nullptr;
 std::ofstream outTrace;
+FILE *outTraceText = nullptr;
 
 // PIN's KNOB system for command line options
 KNOB<std::string> KnobOutTrace(KNOB_MODE_WRITEONCE, "pintool", "out",
@@ -25,6 +26,8 @@ KNOB<BOOL> KnobDebug(KNOB_MODE_WRITEONCE, "pintool", "debug", "0",
                      "Enable debug logging");
 KNOB<BOOL> KnobLog(KNOB_MODE_WRITEONCE, "pintool", "log", "0",
                    "Enable logging");
+KNOB<BOOL> KnobTextTrace(KNOB_MODE_WRITEONCE, "pintool", "texttrace", "1",
+                         "Enable text trace output (trace.txt)");
 
 // Initialize debug output
 static VOID InitDebug(BOOL enable_debug_print) {
@@ -53,6 +56,14 @@ VOID InitTrace(const char *out_path) {
     std::cerr << "[ERROR]: Could not open trace file: " << out_path
               << std::endl;
     PIN_ExitApplication(1);
+  }
+
+  if (KnobTextTrace.Value()) {
+    outTraceText = fopen("trace.txt", "w");
+    if (!outTraceText) {
+      std::cerr << "[ERROR]: Could not open trace.txt" << std::endl;
+      PIN_ExitApplication(1);
+    }
   }
 }
 
@@ -92,6 +103,12 @@ VOID RecordMem(UINT64 instruction_pointer, UINT64 virtual_address,
   // Write the record to trace file
   outTrace.write(reinterpret_cast<const char *>(&record), sizeof(record));
 
+  if (outTraceText) {
+    fprintf(outTraceText, "%c IP=0x%lx VA=0x%lx SIZE=%u\n",
+            is_write ? 'W' : 'R', (unsigned long)instruction_pointer,
+            (unsigned long)virtual_address, (unsigned)instruction_size);
+  }
+
   // Flush periodically to ensure data is written
   static int count = 0;
   if (++count % 1000 == 0) {
@@ -129,6 +146,10 @@ VOID FiniTrace() {
     outTrace.flush();
     outTrace.close();
     DebugPrint("[FINITRACE]: Trace file closed");
+  }
+  if (outTraceText) {
+    fclose(outTraceText);
+    outTraceText = nullptr;
   }
   if (outDebug != nullptr) {
     fclose(outDebug);
