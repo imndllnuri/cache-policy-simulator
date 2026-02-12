@@ -1,3 +1,0 @@
-/home/nuri-imrendi/Projects/cache-policy-simulator/simulator/build/CMakeFiles/cache_sim.dir
-/home/nuri-imrendi/Projects/cache-policy-simulator/simulator/build/CMakeFiles/edit_cache.dir
-/home/nuri-imrendi/Projects/cache-policy-simulator/simulator/build/CMakeFiles/rebuild_cache.dir

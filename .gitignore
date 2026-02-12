@@ -1,4 +1,37 @@
-tools/sde-kit/
-traces/
-*.trace
-obj-intel64/
+# --- Build outputs ---
+simulator/build/
+simulator/cache_sim
+simulator/compile_commands.json
+
+# --- Simulator output files ---
+simulator/*.txt
+simulator/tests/test_reader
+trace.bin
+trace.txt
+pin_final.txt
+debug-out.txt
+log-out.txt
+
+# --- Pintool build & cache ---
+tools/pintool/obj-intel64/
+tools/pintool/*.o
+tools/pintool/*.so
+tools/pintool/*.dylib
+tools/pintool/*.dll
+tools/pintool/*.exp
+tools/pintool/*.lib
+tools/pintool/.cache/
+tools/pintool/compile_commands.json
+tools/sde-kit/*
+
+# --- Python cache ---
+__pycache__/
+*.pyc
+
+# --- Editor / OS cruft ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
