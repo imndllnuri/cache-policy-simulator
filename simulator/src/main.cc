@@ -18,6 +18,8 @@ int main(int argc, char *argv[]) {
       });
 
   Cache::Config config;
+  config.hit_latency = 1;
+  config.miss_penalty = 100;
   config.size_bytes = 32 * 1024; // 32 KB
   config.line_size_bytes = 64;   // 64 bytes
   config.associativity = 8;      // 8-way set associative
@@ -59,6 +61,10 @@ int main(int argc, char *argv[]) {
   std::cout << "Misses             : " << cache.misses() << "\n";
   std::cout << "Hit rate           : "
             << (100.0 * cache.hits() / total_accesses) << "%\n";
+  std::cout << "Total cycles       : " << cache.total_cycles() << "\n";
+  std::cout << "Avg cycles/access  : " << (double)cache.total_cycles() / total_accesses << "\n";
+  std::cout << "AMAT (cycles)      : " << (double)(cache.hits() * config.hit_latency + cache.misses() * (config.hit_latency + config.miss_penalty)) 
+                                          / total_accesses << "\n";
   std::cout << "----------------------------------------\n";
   std::cout << "Read hits          : " << cache.read_hits() << "\n";
   std::cout << "Read misses        : " << cache.read_misses() << "\n";

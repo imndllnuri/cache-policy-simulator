@@ -14,16 +14,18 @@ public:
     uint64_t line_size_bytes;
     uint64_t associativity;
     std::string replacement_policy;
+
+    uint8_t hit_latency;
+    uint8_t miss_penalty;
   };
 
   explicit Cache(const Config &config);
-  ~Cache(); // <-- ADD THIS
+  ~Cache();
 
   // Disable copy (prevents accidental copies with incomplete type)
   Cache(const Cache &) = delete;
   Cache &operator=(const Cache &) = delete;
 
-  // Allow move (define in .cc if needed, but not required now)
   Cache(Cache &&) = default;
   Cache &operator=(Cache &&) = default;
 
@@ -35,7 +37,7 @@ public:
   uint64_t read_misses() const { return read_misses_; }
   uint64_t write_hits() const { return write_hits_; }
   uint64_t write_misses() const { return write_misses_; }
-
+  uint64_t total_cycles() const { return total_cycles_; }
   void reset_stats();
 
 private:
@@ -50,4 +52,7 @@ private:
   uint64_t read_misses_ = 0;
   uint64_t write_hits_ = 0;
   uint64_t write_misses_ = 0;
+  uint8_t hit_latency_;
+  uint8_t miss_penalty_;
+  uint64_t total_cycles_ = 0;
 };

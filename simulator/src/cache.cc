@@ -6,12 +6,11 @@
 
 Cache::~Cache() = default;
 
-Cache::Cache(const Config &config)
-    : line_size_(config.line_size_bytes), 
+Cache::Cache(const Config &config) : line_size_(config.line_size_bytes), 
       num_sets_(config.size_bytes / (config.line_size_bytes * config.associativity)),
-      associativity_(config.associativity),
+      associativity_(config.associativity), hit_latency_(config.hit_latency), miss_penalty_(config.miss_penalty),
       sets_(), hits_(0), misses_(0), read_hits_(0), read_misses_(0),
-      write_hits_(0), write_misses_(0) {
+      write_hits_(0), write_misses_(0), total_cycles_(0) {
   assert(num_sets_ > 0 &&
          "Cache too small for given line size and associativity");
 
@@ -42,12 +41,14 @@ bool Cache::access(uint64_t address, bool is_write) {
 
   if (hit) {
     hits_++;
+    total_cycles_ += hit_latency_;
     if (is_write)
       write_hits_++;
     else
       read_hits_++;
   } else {
     misses_++;
+    total_cycles_ += hit_latency_ + miss_penalty_; //hit + miss latency on a miss 
     if (is_write)
       write_misses_++;
     else
@@ -61,4 +62,5 @@ void Cache::reset_stats() {
   hits_ = misses_ = 0;
   read_hits_ = read_misses_ = 0;
   write_hits_ = write_misses_ = 0;
+  total_cycles_ = 0;
 }
