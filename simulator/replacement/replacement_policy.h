@@ -1,4 +1,4 @@
-
+#pragma once
 
 #include <cstdint>
 #include <string>
@@ -6,7 +6,7 @@
 
 class ReplacementPolicy {
 public:
-  ~ReplacementPolicy() = default;
+  virtual ~ReplacementPolicy() = default;
 
   // Called on a cache hit to update replacement state (e.g., move to MRU)
   virtual void access(uint64_t way) = 0;

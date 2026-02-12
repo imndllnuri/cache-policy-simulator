@@ -50,7 +50,7 @@ public:
 
 private:
   std::ifstream file_;
-  uint64_t count_;
+  uint64_t count_ = 0;
 };
 
 std::unique_ptr<TraceReader> TraceReader::create_binary_reader() {
