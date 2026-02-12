@@ -11,18 +11,12 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  // -----------------------------------------------------------------
-  // 1. Register available replacement policies
-  // -----------------------------------------------------------------
   PolicyFactory::instance().register_policy(
       "LRU",
       [](size_t sets, size_t ways) -> std::unique_ptr<ReplacementPolicy> {
         return std::make_unique<LRU>(sets, ways);
       });
 
-  // -----------------------------------------------------------------
-  // 2. Configure the cache (hardcoded for now – later from JSON)
-  // -----------------------------------------------------------------
   Cache::Config config;
   config.size_bytes = 32 * 1024; // 32 KB
   config.line_size_bytes = 64;   // 64 bytes
@@ -31,17 +25,11 @@ int main(int argc, char *argv[]) {
 
   Cache cache(config);
 
-  // -----------------------------------------------------------------
-  // 3. Open the trace file
-  // -----------------------------------------------------------------
   auto reader = TraceReader::create_binary_reader();
   if (!reader->open(argv[1])) {
     return 1;
   }
 
-  // -----------------------------------------------------------------
-  // 4. Simulation loop
-  // -----------------------------------------------------------------
   MemAccess acc;
   uint64_t total_accesses = 0;
 
@@ -57,9 +45,6 @@ int main(int argc, char *argv[]) {
 
   reader->close();
 
-  // -----------------------------------------------------------------
-  // 5. Print results
-  // -----------------------------------------------------------------
   std::cout << "\n========================================\n";
   std::cout << "      CACHE SIMULATION RESULTS\n";
   std::cout << "========================================\n";

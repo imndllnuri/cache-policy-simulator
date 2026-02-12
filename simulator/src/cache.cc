@@ -7,9 +7,9 @@
 Cache::~Cache() = default;
 
 Cache::Cache(const Config &config)
-    : line_size_(config.line_size_bytes), associativity_(config.associativity),
-      num_sets_(config.size_bytes /
-                (config.line_size_bytes * config.associativity)),
+    : line_size_(config.line_size_bytes), 
+      num_sets_(config.size_bytes / (config.line_size_bytes * config.associativity)),
+      associativity_(config.associativity),
       sets_(), hits_(0), misses_(0), read_hits_(0), read_misses_(0),
       write_hits_(0), write_misses_(0) {
   assert(num_sets_ > 0 &&

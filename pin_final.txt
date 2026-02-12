@@ -1,1 +1,0 @@
-[FINI]: Application exited with code: 0
