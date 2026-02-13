@@ -1,78 +1,94 @@
-#include "../inc/cache.h"
+#include "../inc/simulator.h"
 #include "../inc/policy_factory.h"
-#include "../inc/trace_reader.h"
 #include "../replacement/lru.h"
 #include <chrono>
 #include <iostream>
+#include <string>
 
-int main(int argc, char *argv[]) {
-  if (argc < 2) {
-    std::cerr << "Usage: " << argv[0] << " <trace.bin>\n";
-    return 1;
-  }
+int main(int argc, char* argv[]) {
+    // ---------- Argument parsing ----------
+    if (argc < 2) {
+        std::cerr << "Usage: " << argv[0] 
+                  << " <trace.bin> [--warmup N] [--sim N]\n";
+        return 1;
+    }
 
-  PolicyFactory::instance().register_policy(
-      "LRU",
-      [](size_t sets, size_t ways) -> std::unique_ptr<ReplacementPolicy> {
-        return std::make_unique<LRU>(sets, ways);
-      });
+    std::string trace_file = argv[1];
+    uint64_t warmup = 0;   // default: 20K accesses
+    uint64_t sim = 0;      // default: 50K accesses
 
-  Cache::Config config;
-  config.hit_latency = 1;
-  config.miss_penalty = 100;
-  config.size_bytes = 32 * 1024; // 32 KB
-  config.line_size_bytes = 64;   // 64 bytes
-  config.associativity = 8;      // 8-way set associative
-  config.replacement_policy = "LRU";
+    for (int i = 2; i < argc; i += 2) {
+        std::string flag = argv[i];
+        if (flag == "--warmup" && i+1 < argc) {
+            warmup = std::stoull(argv[i+1]);
+        } else if (flag == "--sim" && i+1 < argc) {
+            sim = std::stoull(argv[i+1]);
+        } else {
+            std::cerr << "Unknown flag: " << flag << "\n";
+            return 1;
+        }
+    }
 
-  Cache cache(config);
+    // ---------- Register replacement policy ----------
+    PolicyFactory::instance().register_policy(
+        "LRU",
+        [](size_t sets, size_t ways) -> std::unique_ptr<ReplacementPolicy> {
+            return std::make_unique<LRU>(sets, ways);
+        });
 
-  auto reader = TraceReader::create_binary_reader();
-  if (!reader->open(argv[1])) {
-    return 1;
-  }
+    // ---------- Build simulator configuration ----------
+    Simulator::SimulatorConfig simulation_config;
+    simulation_config.trace_file_path = trace_file;
+    simulation_config.warmup_accesses = warmup;
+    simulation_config.simulation_accesses = sim;
 
-  MemAccess acc;
-  uint64_t total_accesses = 0;
+    // Cache parameters
+    simulation_config.cache_config.hit_latency = 1;
+    simulation_config.cache_config.miss_penalty = 100;
+    simulation_config.cache_config.size_bytes = 32 * 1024;
+    simulation_config.cache_config.line_size_bytes = 64;
+    simulation_config.cache_config.associativity = 8;
+    simulation_config.cache_config.replacement_policy = "LRU";
 
-  auto start = std::chrono::high_resolution_clock::now();
+    // ---------- Run simulation ----------
+    Simulator sim_obj(simulation_config);
 
-  while (reader->next_access(acc)) {
-    cache.access(acc.virtual_address, acc.is_write != 0);
-    total_accesses++;
-  }
+    auto start = std::chrono::high_resolution_clock::now();
+    if (!sim_obj.run()) {
+        return 1;
+    }
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = end - start;
 
-  auto end = std::chrono::high_resolution_clock::now();
-  std::chrono::duration<double> elapsed = end - start;
+    // ---------- Print results ----------
+    uint64_t total = sim_obj.total_accesses();
+    uint64_t warmup_done = sim_obj.warmup_accesses();
+    uint64_t sim_accesses = sim_obj.simulation_accesses();
 
-  reader->close();
+    std::cout << "\n========================================\n";
+    std::cout << "      CACHE SIMULATION RESULTS\n";
+    std::cout << "========================================\n";
+    std::cout << "Trace file         : " << trace_file << "\n";
+    std::cout << "Cache size         : " << simulation_config.cache_config.size_bytes / 1024 << " KB\n";
+    std::cout << "Line size          : " << simulation_config.cache_config.line_size_bytes << " B\n";
+    std::cout << "Associativity      : " << simulation_config.cache_config.associativity << "-way\n";
+    std::cout << "Replacement policy : " << simulation_config.cache_config.replacement_policy << "\n";
+    std::cout << "----------------------------------------\n";
+    std::cout << "Total accesses read: " << total << "\n";
+    std::cout << "Warmup accesses    : " << warmup_done << "\n";
+    std::cout << "Simulation accesses: " << sim_accesses << "\n";
+    std::cout << "Hits (sim phase)   : " << sim_obj.hits() << "\n";
+    std::cout << "Misses (sim phase) : " << sim_obj.misses() << "\n";
+    if (sim_accesses > 0) {
+        std::cout << "Hit rate (sim phase): "
+                  << (100.0 * sim_obj.hits() / sim_accesses) << "%\n";
+        std::cout << "Avg cycles/access   : "
+                  << (double)sim_obj.total_cycles() / sim_accesses << "\n";
+    }
+    // ... (rest of stats: read/write breakdown, AMAT, time)
+    std::cout << "----------------------------------------\n";
+    std::cout << "Simulation time    : " << elapsed.count() << " seconds\n";
+    std::cout << "========================================\n";
 
-  std::cout << "\n========================================\n";
-  std::cout << "      CACHE SIMULATION RESULTS\n";
-  std::cout << "========================================\n";
-  std::cout << "Trace file         : " << argv[1] << "\n";
-  std::cout << "Cache size         : " << config.size_bytes / 1024 << " KB\n";
-  std::cout << "Line size          : " << config.line_size_bytes << " B\n";
-  std::cout << "Associativity      : " << config.associativity << "-way\n";
-  std::cout << "Replacement policy : " << config.replacement_policy << "\n";
-  std::cout << "----------------------------------------\n";
-  std::cout << "Total accesses     : " << total_accesses << "\n";
-  std::cout << "Hits               : " << cache.hits() << "\n";
-  std::cout << "Misses             : " << cache.misses() << "\n";
-  std::cout << "Hit rate           : "
-            << (100.0 * cache.hits() / total_accesses) << "%\n";
-  std::cout << "Total cycles       : " << cache.total_cycles() << "\n";
-  std::cout << "Avg cycles/access  : " << (double)cache.total_cycles() / total_accesses << "\n";
-  std::cout << "AMAT (cycles)      : " << (double)(cache.hits() * config.hit_latency + cache.misses() * (config.hit_latency + config.miss_penalty)) 
-                                          / total_accesses << "\n";
-  std::cout << "----------------------------------------\n";
-  std::cout << "Read hits          : " << cache.read_hits() << "\n";
-  std::cout << "Read misses        : " << cache.read_misses() << "\n";
-  std::cout << "Write hits         : " << cache.write_hits() << "\n";
-  std::cout << "Write misses       : " << cache.write_misses() << "\n";
-  std::cout << "----------------------------------------\n";
-  std::cout << "Simulation time    : " << elapsed.count() << " seconds\n";
-  std::cout << "========================================\n";
-
-  return 0;
+    return 0;
 }

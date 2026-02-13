@@ -18,6 +18,7 @@ set(SIM_SOURCES
     src/policy_factory.cc
     src/trace_reader.cc
     src/main.cc
+    src/simulator.cc
     replacement/lru.cc
 )
 
